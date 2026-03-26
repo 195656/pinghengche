@@ -1,0 +1,12 @@
+*.o
+*.d
+*.crf
+*.lnp
+*.lst
+*.map
+*.htm
+*.dep
+Build/
+Listings/
+Objects/
+.mxproject
