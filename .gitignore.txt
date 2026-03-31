@@ -1,0 +1,27 @@
+# 编译生成的二进制和中间文件
+Debug/
+Release/
+Objects/
+Listings/
+*.o
+*.d
+*.crf
+*.lnp
+*.lst
+*.map
+*.htm
+*.dep
+*.axf
+*.build_log.htm
+*.htm
+
+# IDE 配置文件（每台电脑可能不同，不建议上传）
+.mxproject
+*.uvoptx
+*.uvguix.*
+MDK-ARM/RTE/
+MDK-ARM/DebugConfig/
+
+# 操作系统临时文件
+Thumbs.db
+.DS_Store
