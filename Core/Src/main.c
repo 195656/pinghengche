@@ -18,11 +18,19 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "tim.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+# include "OLED.h"
+# include "motor.h"
+# include "IIC.h"
+#include "inv_mpu.h"
+#include "inv_mpu_dmp_motion_driver.h"
+#include "mpu6050.h"
+#include <stdio.h>
+#include "sr04.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,7 +51,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+float pitch,roll,yaw;
+uint8_t display_buf[20];
+extern float distance;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,6 +73,7 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -85,14 +96,46 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_TIM1_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+	OLED_Init();
+	OLED_Clear();
+	
+	MPU_Init();
+	HAL_Delay(500);
+	mpu_dmp_init();
+	while(MPU_Init() != 0) {
+    OLED_ShowString(2,2,"MPU Connect...");
+    HAL_Delay(200);
+}
+OLED_ShowString(2,2,"MPU OK       ");
 
+while(mpu_dmp_init() != 0) {
+    OLED_ShowString(2,2,"DMP Loading...");
+    HAL_Delay(200);
+}
+OLED_ShowString(2,2,"DMP Ready!    ");
+OLED_Clear();
+	
+//	OLED_ShowString(2,2,"Init succsee");
+	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_4);
+	Load(1000,1000);
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		HAL_Delay(100);
+		mpu_dmp_get_data(&pitch,&roll,&yaw);
+		sprintf((char *)display_buf , "r:%.2f ",roll);
+		OLED_ShowString(2,2,display_buf);
+		Get_Distance();
+			sprintf((char *)display_buf , "dis:%.2f ",distance);
+		OLED_ShowString(3,2,display_buf);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -112,10 +155,13 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -125,12 +171,12 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -154,8 +200,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
