@@ -136,7 +136,6 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_4);
 	HAL_TIM_Encoder_Start(&htim2,TIM_CHANNEL_ALL);
 	HAL_TIM_Encoder_Start(&htim4,TIM_CHANNEL_ALL);
-	Load(1500,1500);
 	
   /* USER CODE END 2 */
 
@@ -144,22 +143,25 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		Trig_Encoder();
-		sprintf((char *)display_buf , "dis:%.2f ",distance);
-		OLED_ShowString(1,1,"display_buf");
-	
-		sprintf((char *)display_buf , "L%d",Encoder_left);
-		OLED_ShowString(2,1,"display_buf");
-		sprintf((char *)display_buf , "R%d",Encoder_right);
-		OLED_ShowString(3,1,"display_buf");
-	
+Get_Distance();
 
-		sprintf((char *)display_buf , "pitch:.1f",pitch);
-		OLED_ShowString(1,4,"display_buf");
-		sprintf((char *)display_buf , "roll:.1f",roll);
-		OLED_ShowString(2,4,"display_buf");
-		sprintf((char *)display_buf , "yaw:.1f",yaw);
-		OLED_ShowString(3,4,"display_buf");
+sprintf((char *)display_buf, "dis:%.2f ", distance);
+OLED_ShowString(1, 1, display_buf);   // 去掉引号
+
+sprintf((char *)display_buf, "L%d", Encoder_left);
+OLED_ShowString(2, 1, display_buf);
+
+sprintf((char *)display_buf, "R%d", Encoder_right);
+OLED_ShowString(3, 1, display_buf);
+
+sprintf((char *)display_buf, "pit:%.1f", pitch);   // 添加 %
+OLED_ShowString(1, 8, display_buf);
+
+sprintf((char *)display_buf, "rol:%.1f", roll);     // 添加 %
+OLED_ShowString(2, 8, display_buf);
+
+sprintf((char *)display_buf, "yaw:%.1f", yaw);       // 添加 %
+OLED_ShowString(3, 8, display_buf);
 	
 		
 

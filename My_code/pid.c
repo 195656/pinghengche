@@ -6,10 +6,10 @@
 #include "mpu6050.h"
 #include "motor.h"
 
-//直立环变量
-float Vertical_Kp,Vertical_Kd;
-//速度环变量
-float Velocity_Kp,Velocity_Ki;
+//直立环变量 Kp：0-1000  Kd:0-10
+float Vertical_Kp=70,Vertical_Kd=1; 
+//速度环变量 Kp:0-1
+float Velocity_Kp=0,Velocity_Ki;
 uint8_t stop;
 //转向环变量
 float Turn_Kp,Turn_Kd;
@@ -22,7 +22,7 @@ short gyrox,gyroy,gyroz;//角速度
 short aacx,aacy,aacz;//角加速度
 //PID控制中间变量
 int Vertical_out,Velocity_out,Turn_out,Target_Speed,Target_Turn;
-float Med_angle;//平衡时重心角度偏移量——恒定值
+float Med_angle= 13 ;//平衡时重心角度偏移量——恒定值
 int MOTO1,MOTO2;
 
 
@@ -32,7 +32,7 @@ int MOTO1,MOTO2;
 int Vertical(float Med,float Angle,float gyro_Y)
 {
 	int temp;//加载给电机的值
-	temp = Vertical_Kp*(Angle-Med)+Vertical_Kd*gyro_Y;
+	temp = Vertical_Kp*(Med-Angle)+Vertical_Kd*gyro_Y;
 	return temp;
 }
 
@@ -46,6 +46,7 @@ int Velocity(int Target,int encoder_L,int enconder_R)
 	//软件滤波
 	static int Err_LowOut_last;
 	static float a = 0.7;
+Velocity_Ki = Velocity_Kp/200;
 	Err_LowOut = (1-a)*Err+a*Err_LowOut_last;
 	Err_LowOut_last=Err_LowOut;
 	//编码器积分
@@ -85,7 +86,7 @@ void Control(void)
 
 	//传入PID，得到左右电机转速
 	Velocity_out = Velocity(Target_Speed,Encoder_left,Encoder_right);
-	Vertical_out = Vertical(Vertical_out+Med_angle,roll,gyrox);
+	Vertical_out = Vertical(Velocity_out+Med_angle,roll,gyrox);
 	Turn_out = Turn(gyroz,Target_Turn);
 
 	PWM_out = Vertical_out;//前进后退的速度
@@ -94,4 +95,6 @@ void Control(void)
 	//限幅操作
 	Limit(&MOTO1,&MOTO2);
 	Load(MOTO1,MOTO2);
+
+	
 }
