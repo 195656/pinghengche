@@ -31,6 +31,7 @@
 #include "mpu6050.h"
 #include <stdio.h>
 #include "sr04.h"
+#include "encoder.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,12 +55,14 @@
 float pitch,roll,yaw;
 uint8_t display_buf[20];
 extern float distance;
+uint32_t sys_cyc;
+int Encoder_left,Encoder_right;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void Trig_Encoder(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -98,6 +101,8 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM1_Init();
   MX_TIM3_Init();
+  MX_TIM2_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 	OLED_Init();
 	OLED_Clear();
@@ -121,7 +126,9 @@ OLED_Clear();
 //	OLED_ShowString(2,2,"Init succsee");
 	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_4);
-	Load(1000,1000);
+	HAL_TIM_Encoder_Start(&htim2,TIM_CHANNEL_ALL);
+	HAL_TIM_Encoder_Start(&htim4,TIM_CHANNEL_ALL);
+	Load(1500,1500);
 	
   /* USER CODE END 2 */
 
@@ -129,13 +136,18 @@ OLED_Clear();
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		HAL_Delay(100);
-		mpu_dmp_get_data(&pitch,&roll,&yaw);
-		sprintf((char *)display_buf , "r:%.2f ",roll);
+		Trig_Encoder();
+		sprintf((char *)display_buf , "left:%d ",Encoder_left);
 		OLED_ShowString(2,2,display_buf);
-		Get_Distance();
-			sprintf((char *)display_buf , "dis:%.2f ",distance);
+				sprintf((char *)display_buf , "right:%d ",Encoder_right);
 		OLED_ShowString(3,2,display_buf);
+		
+//		mpu_dmp_get_data(&pitch,&roll,&yaw);
+//		sprintf((char *)display_buf , "r:%.2f ",roll);
+//		OLED_ShowString(2,2,display_buf);
+//		Get_Distance();
+//			sprintf((char *)display_buf , "dis:%.2f ",distance);
+//		OLED_ShowString(3,2,display_buf);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -183,7 +195,16 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void Trig_Encoder(void)
+{
+	if(uwTick - sys_cyc<10)
+	{
+		return;
+	}
+	sys_cyc = uwTick;
+	Encoder_left = Read_Speed(&htim2);
+	Encoder_right = -Read_Speed(&htim4);
+}
 /* USER CODE END 4 */
 
 /**
