@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include "sr04.h"
 #include "encoder.h"
+#include "pid.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,11 +53,13 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-float pitch,roll,yaw;
+
 uint8_t display_buf[20];
 extern float distance;
 uint32_t sys_cyc;
-int Encoder_left,Encoder_right;
+extern int Encoder_left;
+extern int Encoder_right;
+extern float pitch,roll,yaw;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -113,15 +116,20 @@ int main(void)
 	while(MPU_Init() != 0) {
     OLED_ShowString(2,2,"MPU Connect...");
     HAL_Delay(200);
-}
-OLED_ShowString(2,2,"MPU OK       ");
+	}
+	OLED_ShowString(2,2,"MPU OK       ");
 
-while(mpu_dmp_init() != 0) {
+	while(mpu_dmp_init() != 0) {
     OLED_ShowString(2,2,"DMP Loading...");
     HAL_Delay(200);
 }
-OLED_ShowString(2,2,"DMP Ready!    ");
-OLED_Clear();
+	OLED_ShowString(2,2,"DMP Ready!    ");
+
+	HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+	OLED_Clear();
+
 	
 //	OLED_ShowString(2,2,"Init succsee");
 	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1);
@@ -137,17 +145,24 @@ OLED_Clear();
   while (1)
   {
 		Trig_Encoder();
-		sprintf((char *)display_buf , "left:%d ",Encoder_left);
-		OLED_ShowString(2,2,display_buf);
-				sprintf((char *)display_buf , "right:%d ",Encoder_right);
-		OLED_ShowString(3,2,display_buf);
+		sprintf((char *)display_buf , "dis:%.2f ",distance);
+		OLED_ShowString(1,1,"display_buf");
+	
+		sprintf((char *)display_buf , "L%d",Encoder_left);
+		OLED_ShowString(2,1,"display_buf");
+		sprintf((char *)display_buf , "R%d",Encoder_right);
+		OLED_ShowString(3,1,"display_buf");
+	
+
+		sprintf((char *)display_buf , "pitch:.1f",pitch);
+		OLED_ShowString(1,4,"display_buf");
+		sprintf((char *)display_buf , "roll:.1f",roll);
+		OLED_ShowString(2,4,"display_buf");
+		sprintf((char *)display_buf , "yaw:.1f",yaw);
+		OLED_ShowString(3,4,"display_buf");
+	
 		
-//		mpu_dmp_get_data(&pitch,&roll,&yaw);
-//		sprintf((char *)display_buf , "r:%.2f ",roll);
-//		OLED_ShowString(2,2,display_buf);
-//		Get_Distance();
-//			sprintf((char *)display_buf , "dis:%.2f ",distance);
-//		OLED_ShowString(3,2,display_buf);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
