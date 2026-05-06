@@ -5,11 +5,13 @@
 #include "inv_mpu_dmp_motion_driver.h"
 #include "mpu6050.h"
 #include "motor.h"
+#include "OLED.h"
 
 //直立环变量 Kp：0-1000  Kd:0-10
-float Vertical_Kp=70,Vertical_Kd=1; 
+float Vertical_Kp=550*0.6;
+float Vertical_Kd=-2.5*0.6; 
 //速度环变量 Kp:0-1
-float Velocity_Kp=0,Velocity_Ki;
+float Velocity_Kp=0.3,Velocity_Ki=0.3/200;
 uint8_t stop;
 //转向环变量
 float Turn_Kp,Turn_Kd;
@@ -22,7 +24,7 @@ short gyrox,gyroy,gyroz;//角速度
 short aacx,aacy,aacz;//角加速度
 //PID控制中间变量
 int Vertical_out,Velocity_out,Turn_out,Target_Speed,Target_Turn;
-float Med_angle= 13 ;//平衡时重心角度偏移量——恒定值
+float Med_angle=0;//平衡时重心角度偏移量——恒定值
 int MOTO1,MOTO2;
 
 
@@ -46,7 +48,6 @@ int Velocity(int Target,int encoder_L,int enconder_R)
 	//软件滤波
 	static int Err_LowOut_last;
 	static float a = 0.7;
-Velocity_Ki = Velocity_Kp/200;
 	Err_LowOut = (1-a)*Err+a*Err_LowOut_last;
 	Err_LowOut_last=Err_LowOut;
 	//编码器积分

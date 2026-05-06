@@ -145,11 +145,11 @@ int main(void)
   {
 Get_Distance();
 
-sprintf((char *)display_buf, "dis:%.2f ", distance);
-OLED_ShowString(1, 1, display_buf);   // 去掉引号
+//sprintf((char *)display_buf, "dis:%.2f ", distance);
+//OLED_ShowString(1, 1, display_buf);   // 去掉引号
 
-sprintf((char *)display_buf, "L%d", Encoder_left);
-OLED_ShowString(2, 1, display_buf);
+//sprintf((char *)display_buf, "L%d", Encoder_left);
+//OLED_ShowString(2, 1, display_buf);
 
 sprintf((char *)display_buf, "R%d", Encoder_right);
 OLED_ShowString(3, 1, display_buf);
